@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPRR Stock Trader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      text-align: center;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input,
+    button {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: 200px;
+    }
+
+    button {
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Stock Trading Signal Calculator</h2>
+    <input type="number" id="open" placeholder="Open Price">
+    <input type="number" id="high" placeholder="High Price">
+    <input type="number" id="low" placeholder="Low Price">
+    <input type="number" id="close" placeholder="Close Price">
+    <input type="number" id="prev_open" placeholder="Previous Open">
+    <input type="number" id="prev_close" placeholder="Previous Close">
+    <input type="number" id="prev_atr" placeholder="Previous ATR">
+    <input type="number" id="atr_n" placeholder="ATR N">
+    <input type="number" id="multiplier" placeholder="Multiplier">
+    <button onclick="calculateSignal()">Calculate Signal</button>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    function calculateHeikinAshi(open, high, low, close, prevOpen, prevClose) {
+      const HA_Close = (open + high + low + close) / 4;
+      const HA_Open = (prevOpen + prevClose) / 2;
+      const HA_High = Math.max(high, HA_Open, HA_Close);
+      const HA_Low = Math.min(low, HA_Open, HA_Close);
+      return [HA_Open, HA_High, HA_Low, HA_Close];
+    }
+
+    function calculateSupertrend(high, low, atr, multiplier) {
+      return ((high + low) / 2) + multiplier * atr;
+    }
+
+    function calculateATR(high, low, prevClose, prevATR, n) {
+      const TR = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+      const ATR = prevATR ? ((prevATR * (n - 1)) + TR) / n : TR;
+      return ATR;
+    }
+
+    function calculateSignal() {
+      const open = parseFloat(document.getElementById('open').value);
+      const high = parseFloat(document.getElementById('high').value);
+      const low = parseFloat(document.getElementById('low').value);
+      const close = parseFloat(document.getElementById('close').value);
+      const prevOpen = parseFloat(document.getElementById('prev_open').value);
+      const prevClose = parseFloat(document.getElementById('prev_close').value);
+      const prevATR = parseFloat(document.getElementById('prev_atr').value);
+      const atrN = parseFloat(document.getElementById('atr_n').value);
+      const multiplier = parseFloat(document.getElementById('multiplier').value);
+
+      const [HA_Open, HA_High, HA_Low, HA_Close] = calculateHeikinAshi(open, high, low, close, prevOpen, prevClose);
+      const ATR = calculateATR(high, low, prevClose, prevATR, atrN);
+      const Supertrend = calculateSupertrend(high, low, ATR, multiplier);
+
+      let decision;
+      if (HA_Close > HA_Open && close > Supertrend) {
+        decision = "Buy";
+      } else if (HA_Close < HA_Open && close < Supertrend) {
+        decision = "Sell";
+      } else {
+        decision = "Hold";
+      }
+
+      document.getElementById('result').innerText = 'Trading Decision: ' + decision;
+    }
+  </script>
+</body>
+
+</html>
